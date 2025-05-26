@@ -11,3 +11,4 @@ transformers
 requests
 mistralai
 pyyaml
+python-multipart
