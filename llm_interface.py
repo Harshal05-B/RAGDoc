@@ -3,7 +3,7 @@ import yaml
 from pathlib import Path
 
 # Load plugin YAML config
-def load_mistral_config(yaml_path: str = "plugin.yaml") -> dict:
+def load_mistral_config(yaml_path: str = "config.yaml") -> dict:
     with open(yaml_path, "r") as file:
         data = yaml.safe_load(file)
 
