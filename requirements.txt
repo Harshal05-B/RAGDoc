@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+langchain
+faiss-cpu
+pypdf2
+openai
+jinja2
+python-dotenv
+torch
+transformers
+requests
+mistralai
+pyyaml
