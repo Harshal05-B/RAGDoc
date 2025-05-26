@@ -1,51 +1,47 @@
-import requests
-import yaml
-from pathlib import Path
+import os
+from dotenv import load_dotenv
+from together import Together
 
-# Load plugin YAML config
-def load_mistral_config(yaml_path: str = "config.yaml") -> dict:
-    with open(yaml_path, "r") as file:
-        data = yaml.safe_load(file)
+# Load the API key from .env file
+load_dotenv()
+api_key = os.getenv("TOGETHER_API_KEY")
+print("API Key loaded successfully.",api_key)
 
-    # Extract base URL and API key from server and security sections
-    base_url = data.get("servers", [{}])[0].get("url", "https://api.mistral.ai")
-    api_key = data.get("securitySchemes", {}).get("ApiKey", {}).get("key", None)
-    model = "mistral-large-latest"  # fallback, override later if needed
-    return {"api_key": api_key, "base_url": base_url, "model": model}
+if not api_key:
+    raise EnvironmentError("TOGETHER_API_KEY not found in .env file.")
 
+# Initialize Together client
+client = Together(api_key=api_key)
 
-# Send a chat completion request
-def get_llm_response(context: str, query: str) -> str:
-    config = load_mistral_config("plugin-redoc-0.yaml")  # Adjust if renamed
-    api_key = config["api_key"]
-    base_url = config["base_url"]
-    model = config["model"]
-
-    endpoint = f"{base_url}/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-
-    prompt = f"""Answer the question based on the context below.
+def get_llm_response(context: str, query: str, model: str = "deepseek-ai/DeepSeek-V3") -> str:
+    """
+    Sends a chat completion request to Together API and returns the full response.
+    Streaming output is printed live.
+    """
+    prompt = f"""Answer the question based on the following context.
 
 Context:
 {context}
 
 Question:
 {query}
-"""
 
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ]
-    }
+Answer:"""
 
-    try:
-        response = requests.post(endpoint, headers=headers, json=payload)
-        response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"].strip()
-    except Exception as e:
-        return f"[ERROR] Mistral API call failed: {e}"
+    messages = [{"role": "user", "content": prompt}]
+
+    # Use stream=True to print while generating
+    response = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        stream=True
+    )
+
+    collected = []
+    for token in response:
+        if hasattr(token, "choices"):
+            delta = token.choices[0].delta.content
+            if delta:
+                print(delta, end="", flush=True)
+                collected.append(delta)
+    return "".join(collected).strip()

@@ -12,3 +12,7 @@ requests
 mistralai
 pyyaml
 python-multipart
+pymupdf
+sentence-transformers
+llama-cpp-python
+together

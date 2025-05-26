@@ -1,27 +1,32 @@
+import fitz  # PyMuPDF
 from pathlib import Path
 from typing import Union
-from PyPDF2 import PdfReader
 
 def load_pdf(file_path: Union[str, Path]) -> str:
     """
-    Extracts text content from a PDF file.
+    Extracts text from each page of a PDF using PyMuPDF (fitz).
 
     Args:
-        file_path (str or Path): Path to the PDF document.
+        file_path (str or Path): Path to the PDF file.
 
     Returns:
-        str: Full text extracted from the PDF.
+        str: Combined text from all pages.
     """
     file_path = Path(file_path)
-    if not file_path.exists() or not file_path.suffix.lower() == ".pdf":
-        raise FileNotFoundError(f"Invalid file: {file_path}")
+    if not file_path.exists() or file_path.suffix.lower() != ".pdf":
+        raise FileNotFoundError(f"Invalid PDF file: {file_path}")
 
-    reader = PdfReader(str(file_path))
-    full_text = []
+    doc = fitz.open(str(file_path))
+    text = ""
+    for page_num, page in enumerate(doc, start=1):
+        page_text = page.get_text()
+        print(f"[INFO] Page {page_num}: {len(page_text)} characters extracted.")
+        text += page_text + "\n"
 
-    for page in reader.pages:
-        text = page.extract_text()
-        if text:
-            full_text.append(text)
-
-    return "\n".join(full_text)
+    doc.close()
+    print(f"[INFO] Total text extracted: {len(text)} characters.")
+    if not text.strip():
+        raise ValueError("No text found in the PDF document.")
+    print("[DONE] PDF text extraction completed.")
+    print("text is",text[:500])  # Print first 500 characters for debugging
+    return text.strip()
