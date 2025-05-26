@@ -46,5 +46,12 @@ def answer_query(index_path: str, query: str, top_k: int = 3) -> str:
 
     print("[INFO] Generating LLM response...")
     response = get_llm_response(context=context, query=query)
+    print("[DONE] Response generated.")
+    print(f"[INFO] Response: {response}")
+    if not response:
+        response = "No relevant information found in the document."
+    else:
+        response = response.strip()
+    print("[INFO] Returning response.", response)
 
     return response
